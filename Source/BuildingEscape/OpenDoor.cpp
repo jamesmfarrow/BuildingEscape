@@ -23,7 +23,7 @@ void UOpenDoor::BeginPlay()
 
 	InitialYaw = GetOwner()->GetActorRotation().Yaw;
 	CurrentYaw = InitialYaw;
-	TargetYaw += InitialYaw;
+	OpenAngle += InitialYaw;
 
 	//here we check for a null pointer 
 	if(!PressurePlate)
@@ -47,10 +47,14 @@ void UOpenDoor::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 	if(PressurePlate && PressurePlate->IsOverlappingActor(ActorThatOpens))
 	{
 		OpenDoor(DeltaTime);
+		DoorLastOpened = GetWorld()->GetTimeSeconds();
 	}
 	else
-	{
-		CloseDoor(DeltaTime);
+	{	
+		if(GetWorld()->GetTimeSeconds() - DoorLastOpened > DoorCloseDelay )
+		{
+			CloseDoor(DeltaTime);
+		}
 	}
 
 
@@ -59,7 +63,7 @@ void UOpenDoor::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 void UOpenDoor::OpenDoor(float DeltaTime)
 {
 	UE_LOG(LogTemp, Warning, TEXT("open door function"));
-	CurrentYaw = FMath::FInterpTo(CurrentYaw, TargetYaw, DeltaTime, 2);
+	CurrentYaw = FMath::FInterpTo(CurrentYaw, OpenAngle, DeltaTime, DoorOpenSpeed);
 	FRotator DoorRotation{GetOwner()->GetActorRotation()};
 	DoorRotation.Yaw = CurrentYaw;
 	GetOwner()->SetActorRotation(DoorRotation);
@@ -68,7 +72,7 @@ void UOpenDoor::OpenDoor(float DeltaTime)
 void UOpenDoor::CloseDoor(float DeltaTime)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Close door function")); 
-	CurrentYaw = FMath::FInterpTo(CurrentYaw, InitialYaw, DeltaTime, 4);
+	CurrentYaw = FMath::FInterpTo(CurrentYaw, InitialYaw, DeltaTime, DoorCloseSpeed);
 	FRotator DoorRotation{GetOwner()->GetActorRotation()};
 	DoorRotation.Yaw = CurrentYaw;
 	GetOwner()->SetActorRotation(DoorRotation);
